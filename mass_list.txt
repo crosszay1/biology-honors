@@ -1,0 +1,10 @@
+
+Winner mass: 1.0 Generation: 1
+Winner mass: 0.999689 Generation: 2
+Winner mass: 0.993352 Generation: 3
+Winner mass: 0.989456 Generation: 4
+Winner mass: 0.986727 Generation: 5
+Winner mass: 0.980652 Generation: 6
+Winner mass: 0.971807 Generation: 7
+Winner mass: 0.971807 Generation: 8
+Winner mass: 0.971807 Generation: 9
