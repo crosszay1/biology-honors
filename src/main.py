@@ -37,10 +37,11 @@ draw_options = pymunk.pygame_util.DrawOptions(screen)  # Setup drawing helper fo
 Generation = 0
 #variables
 balls = []
+predators = []
 ballgroup = pymunk.ShapeFilter(group=1)
 old_placed = False
-winner_mass = None
-
+winner_mass_ball = None
+winner_mass_predator = None
 space = pymunk.Space()  
 space.gravity = (0, 900) 
 # Ground
@@ -72,7 +73,7 @@ def create5balls(rand_low, rand_high, old_mass):
 
         radius = 20 + abs(mass - old_mass)
         ball = pymunk.Body(mass, pymunk.moment_for_circle(mass, 0, radius))
-        ball.position = (50, SCREEN_HEIGHT - 100 - i*5)
+        ball.position = (49.8, SCREEN_HEIGHT - 100 - i*5)
 
         shape = pymunk.Circle(ball, radius)
         shape.name = f"ball {i}"
@@ -83,17 +84,79 @@ def create5balls(rand_low, rand_high, old_mass):
         print(f"ball {i} has a mass of: {ball.mass}")
         space.add(ball, shape)
         balls.append(ball)
+def createpredator(rand_low, rand_high, old_mass):
+    global predators
+    predators = []  # reset fresh
+
+    for i in range(4):
+        if i == 0:
+            mass = old_mass
+        else:
+            random_between = round(random.uniform(rand_low, rand_high), 6)
+            mass = old_mass + random_between
+            if mass < 0:
+                mass = old_mass + 0.01
+
+        radius = 20 + abs(mass - old_mass)
+
+        body = pymunk.Body(mass, pymunk.moment_for_circle(mass, 0, radius))
+        body.position = (0, SCREEN_HEIGHT - 200 - i*40)  # spawn behind
+        shape = pymunk.Circle(body, radius)
+        shape.name = f"predator {i}"
+        shape.elasticity = 0.0
+        shape.collision_type = 3
+        shape.filter = pymunk.ShapeFilter(group=3)
+
+        shape.color = (255, 0, 0, 255)  # visible red
+
+        print(f"predator {i} mass:", mass)
+
+        space.add(body, shape)
+        predators.append(body)
+
 # --- Collision handler ---
-def on_collision(arbiter, space, data):
-    global race_finished, winner_mass
+def on_win(arbiter, space, data):
+    global race_finished, winner_mass_ball
     if race_finished:
         return
-    shape_a, shape_b = arbiter.shapes
-    print(f"{getattr(shape_b, 'name', 'unknown')} is the winner with a mass of {winner_mass}")
-    winner_mass = shape_b.body.mass
+
+    finish, ball = arbiter.shapes
+    winner_mass_ball = ball.body.mass
+    print(f"{ball.name} wins with mass {winner_mass_ball}")
+
     race_finished = True
-    print("---END---")
-space.on_collision(1, 2, begin=on_collision)
+    return False
+
+# --- Robust collision handler for predator eats ball ---
+def on_eaten(arbiter, space, data):
+    shape_a, shape_b = arbiter.shapes
+    
+    # identify which is ball/predator
+    if shape_a.collision_type == 2 and shape_b.collision_type == 3:
+        ball = shape_a
+        pred = shape_b
+    elif shape_b.collision_type == 2 and shape_a.collision_type == 3:
+        ball = shape_b
+        pred = shape_a
+    else:
+        return True
+
+    print(f"{ball.name} collided with {pred.name}. Both destroyed.")
+
+    # Schedule deletion instead of deleting now
+    to_delete.append(ball)
+    to_delete.append(pred)
+
+    # Remove from Python lists immediately
+    global balls, predators
+    balls = [b for b in balls if b is not ball.body]
+    predators = [p for p in predators if p is not pred.body]
+
+    return False
+
+space.on_collision(1, 2, begin=on_win)      # finish line with balls
+space.on_collision(2, 3, begin=on_eaten)    # ball with predator
+
 def delete_balls():
     global balls
     for body in balls:
@@ -101,12 +164,30 @@ def delete_balls():
             space.remove(shape)
         space.remove(body)          # remove the body itself
     balls = []  # clear your list reference
+def delete_predators():
+    global predators
+    # iterate a copy so we can mutate
+    for body in predators[:]:
+        # remove attached shapes
+        for shape in getattr(body, "shapes", []):
+            try:
+                if shape.space is space:
+                    space.remove(shape)
+            except Exception:
+                pass
+        # remove body
+        try:
+            if body.space is space:
+                space.remove(body)
+        except Exception:
+            pass
+    predators = []
 
 running = True
 print("---START---")
 create5balls(0, 1, 1)  # only once at start
 def loop():
-    global race_finished, running, winner_mass, Generation
+    global race_finished, running, winner_mass_ball, Generation
     
 
     while running:
@@ -120,15 +201,21 @@ def loop():
         if not race_finished:
             for ball in balls:  
                 ball.apply_force_at_local_point((100, 0))
+            for predator in predators:
+                predator.apply_force_at_local_point((100, 0))
         else: #rest of code goes in here
             print("---START---")
             old_placed = False
             Generation += 1
             delete_balls()
+            delete_predators()
+
+
             print(f"This is Generation {Generation}")
             with open("mass_list.txt", "a") as f:
-                f.write(f"\nWinner mass: {winner_mass} Generation: {Generation}")
-            create5balls(-0.01, 0.01, winner_mass) #regenerate balls
+                f.write(f"\nWinner mass: {winner_mass_ball} Generation: {Generation}")
+            create5balls(-0.01, 0.01, winner_mass_ball) #regenerate balls
+            createpredator(-1, 0.01, winner_mass_ball)
             race_finished = False
             time.sleep(0.3)
             
@@ -136,7 +223,7 @@ def loop():
         space.debug_draw(draw_options)
 
         pygame.display.flip()
-        clock.tick(100)
+        clock.tick(250)
 
     pygame.quit()
     
