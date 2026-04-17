@@ -7,13 +7,13 @@ CELL_SIZE = 10  # pixels per cell
 WIDTH = GRID_SIZE * CELL_SIZE
 HEIGHT = GRID_SIZE * CELL_SIZE
 
-# --- Init ---
+# init stuff
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Marble Grid")
 clock = pygame.time.Clock()
 
-# --- Marble Class ---
+
 class Marble:
     def __init__(self, x, y, color=(255, 255, 255)):
         self.x = x

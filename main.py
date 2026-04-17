@@ -2,6 +2,7 @@ import pygame
 import random
 import torch as pt #pt = pytorch. feels cool to do acronyms I guess. I just realized I talk to myself in code comments alot. Why? 
 import torch.nn as nn ## nn = neural network. 
+import copy #for reproduction
 # --- Config ---
 GRID_SIZE = 64
 CELL_SIZE = 10  # pixels per cell
@@ -24,6 +25,17 @@ class MarbleBrain(nn.Module):
         )
     def forward(self, x):
         return self.net(x)
+    def decide_move(brain, x, y, goal_x, goal_y):
+        inputs = pt.tensor([x, y, goal_x, goal_y], dtype=pt.float32)
+        output = brain(inputs)
+
+        move = pt.argmax(output).item()
+
+        return ["up", "down", "left", "right"][move]
+    def mutate(brain, strength=0.1):
+        with pt.no_grad():
+            for param in brain.parameters():
+                param += pt.randn_like(param) * strength
 # --- Marble Class ---
 class Marble:
     def __init__(self, x, y, color=(255, 255, 255), weights=None):
@@ -79,7 +91,7 @@ class food:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.color = color=(255, 255, 255)
+        self.color =(255, 255, 255)
     def draw(self, surface):
         pygame.draw.circle(
             surface,
@@ -96,18 +108,13 @@ marbles = [ #spawn marbles at random places
     Marble(random.randint(0, 63), random.randint(0, 63), (255, 0, 0)),
     Marble(random.randint(0, 63), random.randint(0, 63), (255, 0, 0)),
     Marble(random.randint(0, 63), random.randint(0, 63), (255, 0, 0)),
-    Marble(random.randint(0, 63), random.randint(0, 63), (255, 0, 0)),
-    Marble(random.randint(0, 63), random.randint(0, 63), (255, 0, 0)),
-    Marble(random.randint(0, 63), random.randint(0, 63), (255, 0, 0)),
-    Marble(random.randint(0, 63), random.randint(0, 63), (255, 0, 0)),
-    Marble(random.randint(0, 63), random.randint(0, 63), (255, 0, 0)),
 ]
 foods = [ #spawn food at random places
     food(random.randint(0, 63), random.randint(0, 63)),
     food(random.randint(0, 63), random.randint(0, 63)),
     food(random.randint(0, 63), random.randint(0, 63)),
 ]
-def get_all_marbles():
+def gather_inputs():
     return [marble.snapshot() for marble in marbles]
 
 def main():
@@ -117,8 +124,6 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
-                print(get_all_marbles())
 
         screen.fill((0, 0, 0))
 
@@ -130,7 +135,9 @@ def main():
         for marble in marbles:
             marble.decide(marble.weights)
             marble.draw(screen)
-        print(get_all_marbles())
+        for item in foods:
+            item.draw(screen)
+        print(gather_inputs())
         pygame.display.flip()
         clock.tick(20)
 

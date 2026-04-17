@@ -1,0 +1,4 @@
+Phase 1: Marbles are connceted to weights. We will have absolutely no punishment, food, or hunger. When a marble (randomly) comes into contact with food, we will delete all other marbles, and create 4 copies of that marble. We will do this until the marbles begin to move towards and collect the food
+Phase 2: The idea of hunger is introduced. Marbles that run out of it, die. The hunger will be very high initially, and marbles that die of hunger will be replaced with other marbles
+Phase 3: Hunger bar is lowered
+Phase 4: The marbles now compete against each other to be the last one standing. The marble that wins, get to mutate and continue living.
