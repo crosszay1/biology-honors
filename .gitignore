@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite
+*.log
+*.bak
+*.tmp
+*.swp
+#I have a jorunal filled with my initial thoughts about the project. It's pretty nonsensical and "Abstract" so I'll exclude it for now
+journal.txt 
