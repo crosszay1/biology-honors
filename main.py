@@ -25,7 +25,7 @@ class MarbleBrain(nn.Module):
         )
     def forward(self, x):
         return self.net(x)
-    def decide_move(brain, x, y, goal_x, goal_y):
+    def decide_move(self, brain, x, y, goal_x, goal_y):
         inputs = pt.tensor([x, y, goal_x, goal_y], dtype=pt.float32)
         output = brain(inputs)
 
@@ -84,8 +84,8 @@ class Marble:
 
     def snapshot(self): #Do we need a function for this? No.... but it looks cleaner, ya know?
         return {
-            'x': self.x,
-            'y': self.y,
+            'x': self.x / (GRID_SIZE - 1), #normalize to 0-1 
+            'y': self.y / (GRID_SIZE - 1), #normalize to 0-1. idk why we have to do this. internet told me I had to 
         }
 class food:
     def __init__(self, x, y):
@@ -115,7 +115,9 @@ foods = [ #spawn food at random places
     food(random.randint(0, 63), random.randint(0, 63)),
 ]
 def gather_inputs():
-    return [marble.snapshot() for marble in marbles]
+    snapshot = [marble.snapshot() for marble in marbles]
+    return snapshot
+
 
 def main():
     running = True
