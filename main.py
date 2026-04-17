@@ -15,7 +15,7 @@ clock = pygame.time.Clock()
 
 # --- Marble Class ---
 class Marble:
-    def __init__(self, x, y, color=(255, 255, 255)):
+    def __init__(self, x, y, color=(255, 255, 255), weights=None):
         self.x = x
         self.y = y
         self.color = color
@@ -45,6 +45,18 @@ class Marble:
             ),
             CELL_SIZE // 3
         )
+    def decide(self, weights):
+        #Where the magic actually happens. This is where the marble will decide which direction to move based on the weights.
+        #For now let's do a random move as a placeholder
+        move = random.choice(['up', 'down', 'left', 'right'])
+        if move == 'up':
+            self.move_up()
+        elif move == 'down':
+            self.move_down()
+        elif move == 'left':
+            self.move_left()
+        elif move == 'right':
+            self.move_right()
 
 marbles = [ #spawn marbles at random places
     Marble(random.randint(0, 63), random.randint(0, 63), (255, 0, 0)),
@@ -52,21 +64,31 @@ marbles = [ #spawn marbles at random places
     Marble(random.randint(0, 63), random.randint(0, 63), (0, 0, 255)),
 ]
 
-# --- Main Loop ---
-running = True
-while running:
-    screen.fill((0, 0, 0))
+def main():
+    running = True
+    while running:
+        # Handle events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-    # Draw grid (optional but helpful)
-    for x in range(0, WIDTH, CELL_SIZE):
-        pygame.draw.line(screen, (40, 40, 40), (x, 0), (x, HEIGHT))
-    for y in range(0, HEIGHT, CELL_SIZE):
-        pygame.draw.line(screen, (40, 40, 40), (0, y), (WIDTH, y))
+        screen.fill((0, 0, 0))
 
-    # Handle events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    
-#main program will go here
-pygame.quit()
+        # Draw grid (optional but helpful)
+        for x in range(0, WIDTH, CELL_SIZE):
+            pygame.draw.line(screen, (40, 40, 40), (x, 0), (x, HEIGHT))
+        for y in range(0, HEIGHT, CELL_SIZE):
+            pygame.draw.line(screen, (40, 40, 40), (0, y), (WIDTH, y))
+
+        # Update and draw all marbles each frame
+        for marble in marbles:
+            marble.decide(marble.weights)
+            marble.draw(screen)
+
+        pygame.display.flip()
+        clock.tick(20)
+
+    pygame.quit()
+
+
+main()
