@@ -16,11 +16,10 @@ FOOD_COUNT = 8
 speed = 2000
 
 rChance = 0.10
-MUTATION_STRENGTH = 0.05
+MUTATION_STRENGTH = 0.01
 WEIGHTS_DIR = "marble_weights"
 
-#
-# --- Init ---
+
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Marble Grid AI")
@@ -186,7 +185,7 @@ def random_empty_cell(marbles, foods):
         if (x, y) not in occupied:
             return x, y
 
-    # fallback if very crowded
+    # fallback if very crowded. Shouldn't happen.. but like.. it could
     return random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1)
 
 
@@ -277,7 +276,7 @@ def main():
         for marble in list(marbles):
             marble.decide(foods)
             print(f"Marble at ({marble.x}, {marble.y}) with hunger {marble.hunger}")
-            # marble dies when hunger is depleted
+            #marble dies when hunger is depleted
             if marble.hunger <= 0:
                 marbles.remove(marble)
                 continue
@@ -313,5 +312,4 @@ def main():
     pygame.quit()
 
 
-if __name__ == "__main__":
-    main()
+main()
