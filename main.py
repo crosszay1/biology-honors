@@ -17,7 +17,8 @@ speed = 2000
 
 rChance = 0.5
 MUTATION_STRENGTH = 0.01
-WEIGHTS_DIR = "marble_weights"
+weightsDir = "marble_weights"
+FOOD_DIRECTION_BONUS = 0.10
 
 
 pygame.init()
@@ -40,7 +41,21 @@ class MarbleBrain(nn.Module):
 
     def decide_move(self, inputs, x, y):
         output = self.forward(inputs).clone()
+        
 
+        #this bit here is vibecoded. We'll see if it works
+        # Small heuristic nudge toward the nearest food direction.
+        ndx = inputs[4].item()
+        ndy = inputs[5].item()
+        if ndy < 0:
+            output[0] += FOOD_DIRECTION_BONUS  # up
+        elif ndy > 0:
+            output[1] += FOOD_DIRECTION_BONUS  # down
+        if ndx < 0:
+            output[2] += FOOD_DIRECTION_BONUS  # left
+        elif ndx > 0:
+            output[3] += FOOD_DIRECTION_BONUS  # right
+        #end: vibe coded
         # mask illegal moves
         if y <= 0:
             output[0] = -1e9  # up
@@ -201,7 +216,7 @@ def draw_grid():
         pygame.draw.line(screen, (40, 40, 40), (0, y), (WIDTH, y))
 
 
-def save_marbles_weights(marbles, directory=WEIGHTS_DIR):
+def save_marbles_weights(marbles, directory=weightsDir):
     os.makedirs(directory, exist_ok=True)
 
     #clear previous marble weight files so the directory mirrors current marbles
@@ -216,7 +231,7 @@ def save_marbles_weights(marbles, directory=WEIGHTS_DIR):
     print(f"Saved {len(marbles)} marble brains to '{directory}'")
 
 
-def load_marbles_from_weights(directory=WEIGHTS_DIR):
+def load_marbles_from_weights(directory=weightsDir):
     if not os.path.isdir(directory):
         print(f"No weights directory found at '{directory}'")
         return []
