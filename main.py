@@ -4,6 +4,7 @@ import torch as pt
 import torch.nn as nn
 import copy
 import os
+import threading #for the like input thing
 
 GRID_SIZE = 64
 CELL_SIZE = 10
@@ -74,7 +75,11 @@ class MarbleBrain(nn.Module):
             for param in self.parameters():
                 param += pt.randn_like(param) * strength
 
-
+def input_thread():
+    global rChance
+    while True:
+        rChance = float(input("New rChance: "))
+threading.Thread(target=input_thread, daemon=True).start()
 class Food:
     def __init__(self, x, y):
         self.x = x
