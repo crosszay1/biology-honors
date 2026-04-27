@@ -10,19 +10,19 @@ CELL_SIZE = 10
 WIDTH = GRID_SIZE * CELL_SIZE
 HEIGHT = GRID_SIZE * CELL_SIZE
 
-INITIAL_MARBLES = 5
-MAX_MARBLES = 30
-FOOD_COUNT = 8
+INITIAL_MARBLES = 20
+MAX_MARBLES = 100
+FOOD_COUNT = 100
 speed = 2000
 
-rChance = 0.10
+rChance = 0.5
 MUTATION_STRENGTH = 0.01
 WEIGHTS_DIR = "marble_weights"
 
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Marble Grid AI")
+pygame.display.set_caption("Marble Evolution")
 clock = pygame.time.Clock()
 
 
@@ -81,7 +81,7 @@ class Marble:
         self.y = y
         self.color = color
         self.brain = brain if brain is not None else MarbleBrain()
-        self.hunger = 10000
+        self.hunger = 500
     def move_up(self):
         if self.y > 0:
             self.y -= 1
@@ -289,9 +289,10 @@ def main():
                     break
 
             if eaten is not None:
-                foods.remove(eaten)
-                spawn_food(marbles, foods)
-                marble.hunger = 10000
+                new_x, new_y = random_empty_cell(marbles, foods)
+                eaten.x = new_x
+                eaten.y = new_y
+                marble.hunger += 500
 
                 # duplicate on eat (with mutation)
                 if len(marbles) < MAX_MARBLES:
