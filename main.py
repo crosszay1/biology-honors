@@ -15,6 +15,7 @@ INITIAL_MARBLES = 20
 MAX_MARBLES = 100
 FOOD_COUNT = 100
 speed = 2000
+print_iter = 0
 
 rChance = 0.5
 MUTATION_STRENGTH = 0.01
@@ -294,8 +295,13 @@ def main():
 
         #Main loop for each marble
         for marble in list(marbles):
+            global printer_iter
             marble.decide(foods)
-            print(f"Marble at ({marble.x}, {marble.y}) with hunger {marble.hunger}")
+            print(f"Marble at ({marble.x}, {marble.y}) with hunger {marble.hunger}: ")
+            if print_iter % 100 == 0:
+                for name, param in marble.brain.named_parameters():
+                    print(name, param.data)
+            print_iter += 1
             #marble dies when hunger is depleted
             if marble.hunger <= 0:
                 marbles.remove(marble)
@@ -334,3 +340,8 @@ def main():
 
 
 main()
+
+
+
+
+
