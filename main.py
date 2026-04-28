@@ -11,7 +11,7 @@ CELL_SIZE = 10
 WIDTH = GRID_SIZE * CELL_SIZE
 HEIGHT = GRID_SIZE * CELL_SIZE
 
-INITIAL_MARBLES = 20
+INITIAL_MARBLES = 5
 MAX_MARBLES = 100
 FOOD_COUNT = 100
 speed = 2000
@@ -102,7 +102,7 @@ class Marble:
         self.y = y
         self.color = color
         self.brain = brain if brain is not None else MarbleBrain()
-        self.hunger = 500
+        self.hunger = 50
     def move_up(self):
         if self.y > 0:
             self.y -= 1
@@ -295,13 +295,13 @@ def main():
 
         #Main loop for each marble
         for marble in list(marbles):
-            global printer_iter
+            global print_iter
             marble.decide(foods)
             print(f"Marble at ({marble.x}, {marble.y}) with hunger {marble.hunger}: ")
             if print_iter % 100 == 0:
                 for name, param in marble.brain.named_parameters():
                     print(name, param.data)
-            print_iter += 1
+            
             #marble dies when hunger is depleted
             if marble.hunger <= 0:
                 marbles.remove(marble)
@@ -318,12 +318,12 @@ def main():
                 new_x, new_y = random_empty_cell(marbles, foods)
                 eaten.x = new_x
                 eaten.y = new_y
-                marble.hunger += 500
+                marble.hunger += 50
 
                 # duplicate on eat (with mutation)
                 if len(marbles) < MAX_MARBLES:
                     marbles.append(marble.clone_with_mutation())
-
+        print_iter += 1
         # --- Draw ---
         screen.fill((0, 0, 0))
         draw_grid()
