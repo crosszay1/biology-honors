@@ -298,7 +298,7 @@ def main():
             global print_iter
             marble.decide(foods)
             print(f"Marble at ({marble.x}, {marble.y}) with hunger {marble.hunger}: ")
-            if print_iter % 100 == 0:
+            if print_iter % 1000 == 0:
                 for name, param in marble.brain.named_parameters():
                     print(name, param.data)
             
