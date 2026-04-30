@@ -85,7 +85,8 @@ class Food:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.color = (255, 255, 255)
+        self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)) #random color for fun. Fun? That was the ai autocomplete thing. I just think it makes it look better but uh I'm rambling im gonna stop and push this code
+       
 
     def draw(self, surface):
         pygame.draw.circle(
