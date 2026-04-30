@@ -5,6 +5,8 @@ import torch.nn as nn
 import copy
 import os
 import threading #for the like input thing
+import curses # so terminal doesn't SUCK
+import sys
 
 GRID_SIZE = 64
 CELL_SIZE = 10
@@ -15,7 +17,7 @@ INITIAL_MARBLES = 5
 MAX_MARBLES = 100
 FOOD_COUNT = 100
 speed = 2000
-print_iter = 0
+log_iter = 0
 
 rChance = 0.5
 MUTATION_STRENGTH = 0.01
@@ -27,6 +29,11 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Marble Evolution")
 clock = pygame.time.Clock()
+
+
+# default global logger — prints to stdout; curses_main will override this
+def log(*args, **kwargs):
+    print(*args, **kwargs)
 
 
 class MarbleBrain(nn.Module):
@@ -76,11 +83,6 @@ class MarbleBrain(nn.Module):
             for param in self.parameters():
                 param += pt.randn_like(param) * strength
 
-def input_thread():
-    global rChance
-    while True:
-        rChance = float(input("New rChance: "))
-threading.Thread(target=input_thread, daemon=True).start()
 class Food:
     def __init__(self, x, y):
         self.x = x
@@ -234,12 +236,12 @@ def save_marbles_weights(marbles, directory=weightsDir):
         path = os.path.join(directory, f"marble_{i}.pt")
         pt.save(marble.brain.state_dict(), path)
 
-    print(f"Saved {len(marbles)} marble brains to '{directory}'")
+    log(f"Saved {len(marbles)} marble brains to '{directory}'")
 
 
 def load_marbles_from_weights(directory=weightsDir):
     if not os.path.isdir(directory):
-        print(f"No weights directory found at '{directory}'")
+        log(f"No weights directory found at '{directory}'")
         return []
 
     weight_files = sorted(
@@ -248,7 +250,7 @@ def load_marbles_from_weights(directory=weightsDir):
     )
 
     if not weight_files:
-        print(f"No marble weight files found in '{directory}'")
+        log(f"No marble weight files found in '{directory}'")
         return []
 
     loaded_marbles = []
@@ -266,7 +268,7 @@ def load_marbles_from_weights(directory=weightsDir):
             )
         )
 
-    print(f"Loaded {len(loaded_marbles)} marble brains from '{directory}'")
+    log(f"Loaded {len(loaded_marbles)} marble brains from '{directory}'")
     return loaded_marbles
 
 
@@ -277,7 +279,6 @@ def main():
             Marble(random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1))
             for _ in range(INITIAL_MARBLES)
         ]
-
     foods = []
     for _ in range(FOOD_COUNT):
         spawn_food(marbles, foods)
@@ -295,12 +296,12 @@ def main():
 
         #Main loop for each marble
         for marble in list(marbles):
-            global print_iter
+            global log_iter
             marble.decide(foods)
-            print(f"Marble at ({marble.x}, {marble.y}) with hunger {marble.hunger}: ")
-            if print_iter % 1000 == 0:
+            if log_iter % 1000 == 0:
+                log(f"Marble at ({marble.x}, {marble.y}) with hunger {marble.hunger}: ")
                 for name, param in marble.brain.named_parameters():
-                    print(name, param.data)
+                    log(f"{name}: {param.data}")
             
             #marble dies when hunger is depleted
             if marble.hunger <= 0:
@@ -323,7 +324,7 @@ def main():
                 # duplicate on eat (with mutation)
                 if len(marbles) < MAX_MARBLES:
                     marbles.append(marble.clone_with_mutation())
-        print_iter += 1
+        log_iter += 1
         # --- Draw ---
         screen.fill((0, 0, 0))
         draw_grid()
@@ -339,7 +340,84 @@ def main():
     pygame.quit()
 
 
-main()
+
+
+
+def curses_main(stdscr):
+    global log
+    curses.curs_set(1)
+    stdscr.clear()
+
+    height, width = stdscr.getmaxyx()
+
+    # Split screen: top = output, bottom = input
+    output_h = height - 3
+    input_h = 3
+
+    output_win = curses.newwin(output_h, width, 0, 0)
+    input_win = curses.newwin(input_h, width, output_h, 0)
+
+    output_win.scrollok(True)
+    input_win.border()
+
+    log_lines = []
+
+    def log(msg):
+        log_lines.append(msg)
+        output_win.clear()
+
+        # Show only visible lines
+        max_lines = output_h - 1
+        visible = log_lines[-max_lines:]
+
+        for i, line in enumerate(visible):
+            output_win.addstr(i, 0, line)
+
+        output_win.refresh()
+
+    def get_input(prompt="> "):
+        input_win.clear()
+        input_win.border()
+        input_win.addstr(1, 1, prompt)
+        input_win.refresh()
+
+        curses.echo()
+        user_input = input_win.getstr(1, len(prompt) + 1).decode("utf-8")
+        curses.noecho()
+
+        return user_input
+
+    # Demo loop
+    log("Console started.")
+    while True:
+        cmd = get_input()
+        log(f"> {cmd}")
+        if cmd.lower() in ("quit", "exit"):
+            running = False
+            exit(1)
+        elif cmd.lower().startswith("rchance"):
+            try:
+                value_str = cmd[7:].strip()  # "rchance" is 7 characters
+                if not value_str:
+                    log("Error: COuldn't find number after rChance command")
+                    continue
+                rChance = float(value_str)
+                log(f"Successfully updated rChance to {rChance}")
+            except ValueError as e:
+                log(f"Error getting new rChance value: {e}")
+                continue
+            
+        
+        elif cmd.lower().startswith("start"):   
+            try:
+                thread = threading.Thread(target=main)
+                log("Starting main loop...")
+                thread.start()
+            except Exception as e:
+                log(f"Error starting main loop: {e}")
+                
+
+curses.wrapper(curses_main)
 
 
 
