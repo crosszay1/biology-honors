@@ -102,7 +102,7 @@ class Marble:
         self.y = y
         self.color = color
         self.brain = brain if brain is not None else MarbleBrain()
-        self.hunger = 5000
+        self.hunger = 50
     def move_up(self):
         if self.y > 0:
             self.y -= 1
