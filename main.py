@@ -1,3 +1,5 @@
+import time
+
 import pygame
 import random
 import torch as pt
@@ -15,8 +17,8 @@ HEIGHT = GRID_SIZE * CELL_SIZE
 
 INITIAL_MARBLES = 5
 MAX_MARBLES = 100
-FOOD_COUNT = 20
-speed = 2000
+FOOD_COUNT = 100
+speed = 200
 log_iter = 0
 
 rChance = 0.5
@@ -103,7 +105,7 @@ class Marble:
         self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)) #random color for fun. Fun? That was the ai autocomplete thing. I just think it makes it look better but uh I'm rambling im gonna stop and push this code
 
         self.brain = brain if brain is not None else MarbleBrain()
-        self.hunger = 50
+        self.hunger = 250
     def move_up(self):
         if self.y > 0:
             self.y -= 1
@@ -282,14 +284,18 @@ def main():
     clock = pygame.time.Clock()
     marbles = load_marbles_from_weights()
     if not marbles:
+        log("No saved marbles found, starting with random marbles.")
         marbles = [
             Marble(random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1))
             for _ in range(INITIAL_MARBLES)
         ]
+    else:
+        log(f"Starting with {len(marbles)} loaded marbles.")
     foods = []
     for _ in range(FOOD_COUNT):
         spawn_food(marbles, foods)
-
+    log("Waiting 2 seconds...")
+    time.sleep(2)
     running = True
     while running:
         for event in pygame.event.get():
@@ -326,7 +332,7 @@ def main():
                 new_x, new_y = random_empty_cell(marbles, foods)
                 eaten.x = new_x
                 eaten.y = new_y
-                marble.hunger += 50
+                marble.hunger += 250
 
                 # duplicate on eat (with mutation)
                 if len(marbles) < MAX_MARBLES:
@@ -402,6 +408,13 @@ def curses_main(stdscr):
         if cmd.lower() in ("quit", "exit"):
             running = False
             exit(1)
+        elif cmd.lower() in ("help", "?"):
+            log("Commands:")
+            log("  help/? - Show this message")
+            log("  quit/exit - Exit the program")
+            log("  rchance <value> - Set random move chance (0.0 to 1.0)")
+            log("  exec <code> - Execute arbitrary Python code (use with caution!)")
+            log(" omg I clicked tab and ai generated list of all my commands so cool")
         elif cmd.lower().startswith("rchance"):
             try:
                 global rChance
@@ -415,7 +428,16 @@ def curses_main(stdscr):
                 log(f"Error getting new rChance value: {e}")
                 continue
             
-        
+        elif cmd.lower().startswith("exec"):
+            code = cmd[4:].strip()  # "exec" is 4 characters
+            if not code:
+                log("Error: No code provided to exec command")
+                continue
+            try:
+                exec(code, globals())
+                log("Executed sucessfully")
+            except Exception as e:
+                log(f"Error executing code: {e}")
         elif cmd.lower().startswith("start"):   
             try:
                 thread = threading.Thread(target=main)
