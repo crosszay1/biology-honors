@@ -15,7 +15,7 @@ HEIGHT = GRID_SIZE * CELL_SIZE
 
 INITIAL_MARBLES = 5
 MAX_MARBLES = 100
-FOOD_COUNT = 100
+FOOD_COUNT = 20
 speed = 2000
 log_iter = 0
 
@@ -85,8 +85,7 @@ class Food:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)) #random color for fun. Fun? That was the ai autocomplete thing. I just think it makes it look better but uh I'm rambling im gonna stop and push this code
-       
+        self.color = (0, 255, 0)
 
     def draw(self, surface):
         pygame.draw.circle(
@@ -101,7 +100,8 @@ class Marble:
     def __init__(self, x, y, color=(255, 0, 0), brain=None):
         self.x = x
         self.y = y
-        self.color = color
+        self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)) #random color for fun. Fun? That was the ai autocomplete thing. I just think it makes it look better but uh I'm rambling im gonna stop and push this code
+
         self.brain = brain if brain is not None else MarbleBrain()
         self.hunger = 50
     def move_up(self):
