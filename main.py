@@ -25,10 +25,8 @@ weightsDir = "marble_weights"
 FOOD_DIRECTION_BONUS = 0.10
 
 
-pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Marble Evolution")
-clock = pygame.time.Clock()
+screen = None
+clock = None
 
 
 # default global logger — prints to stdout; curses_main will override this
@@ -104,7 +102,7 @@ class Marble:
         self.y = y
         self.color = color
         self.brain = brain if brain is not None else MarbleBrain()
-        self.hunger = 50
+        self.hunger = 5000
     def move_up(self):
         if self.y > 0:
             self.y -= 1
@@ -273,6 +271,14 @@ def load_marbles_from_weights(directory=weightsDir):
 
 
 def main():
+
+
+
+    global screen, clock
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Marble Evolution")
+    clock = pygame.time.Clock()
     marbles = load_marbles_from_weights()
     if not marbles:
         marbles = [
@@ -371,7 +377,7 @@ def curses_main(stdscr):
         visible = log_lines[-max_lines:]
 
         for i, line in enumerate(visible):
-            output_win.addstr(i, 0, line)
+            output_win.addstr(i, 0, line[:width - 1])
 
         output_win.refresh()
 
@@ -397,6 +403,7 @@ def curses_main(stdscr):
             exit(1)
         elif cmd.lower().startswith("rchance"):
             try:
+                global rChance
                 value_str = cmd[7:].strip()  # "rchance" is 7 characters
                 if not value_str:
                     log("Error: COuldn't find number after rChance command")
