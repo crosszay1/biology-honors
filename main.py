@@ -8,8 +8,10 @@ import copy
 import os
 import threading #for the like input thing
 import curses # so terminal doesn't SUCK
+import sys
 import pandas as pd
 import plotly.graph_objects as go
+from collections import defaultdict
 
 GRID_SIZE = 64
 CELL_SIZE = 10
@@ -21,7 +23,6 @@ MAX_MARBLES = 100
 FOOD_COUNT = 100
 speed = 200
 log_iter = 0
-hungerGiven = 150
 
 rChance = 0.5
 MUTATION_STRENGTH = 0.01
@@ -33,8 +34,6 @@ screen = None
 clock = None
 marble_lifespans = [] #array to store the like marble ages stuff so we can later graph it ye
 #metrics_by_iteration = defaultdict(list)  # Track metrics per iteration
-sim_marbles = None
-sim_foods = None
 
 
 # default global logger — prints to stdout; curses_main will override this
@@ -225,29 +224,6 @@ def spawn_food(marbles, foods):
     foods.append(Food(x, y))
 
 
-def set_food_count(target_count):
-    global FOOD_COUNT, sim_marbles, sim_foods
-
-    if target_count < 1:
-        log("food_count must be >= 1")
-        return
-
-    FOOD_COUNT = target_count
-
-    # Simulation not started yet: only update startup config.
-    if sim_marbles is None or sim_foods is None:
-        log(f"Set startup food_count to {FOOD_COUNT}")
-        return
-
-    while len(sim_foods) < FOOD_COUNT:
-        spawn_food(sim_marbles, sim_foods)
-
-    while len(sim_foods) > FOOD_COUNT:
-        sim_foods.pop()
-
-    log(f"Updated live food count to {len(sim_foods)}")
-
-
 def draw_grid():
     for x in range(0, WIDTH, CELL_SIZE):
         pygame.draw.line(screen, (40, 40, 40), (x, 0), (x, HEIGHT))
@@ -369,7 +345,7 @@ def main():
 
 
 
-    global screen, clock, sim_marbles, sim_foods
+    global screen, clock
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Marble Evolution")
@@ -386,8 +362,6 @@ def main():
     foods = []
     for _ in range(FOOD_COUNT):
         spawn_food(marbles, foods)
-    sim_marbles = marbles
-    sim_foods = foods
     log("Waiting 2 seconds...")
     time.sleep(2)
     running = True
@@ -428,7 +402,7 @@ def main():
                 new_x, new_y = random_empty_cell(marbles, foods)
                 eaten.x = new_x
                 eaten.y = new_y
-                marble.hunger += hungerGiven
+                marble.hunger += 250
 
                 # duplicate on eat (with mutation)
                 if len(marbles) < MAX_MARBLES:
@@ -510,13 +484,13 @@ def curses_main(stdscr):
         cmd = get_input()
         log(f"> {cmd}")
         if cmd.lower() in ("quit", "exit"):
+            running = False
             exit(1)
         elif cmd.lower() in ("help", "?"):
             log("Commands:")
             log("  help/? - Show this message")
             log("  quit/exit - Exit the program")
             log("  rchance <value> - Set random move chance (0.0 to 1.0)")
-            log("  food_count <value> - Set food pieces (>= 1), live if running")
             log("  exec <code> - Execute arbitrary Python code (use with caution!)")
             log("  start - Start the marble evolution simulation")
             log("  plot/graph - Generate lifespan graph and save as HTML")
@@ -532,16 +506,6 @@ def curses_main(stdscr):
                 log(f"Successfully updated rChance to {rChance}")
             except ValueError as e:
                 log(f"Error getting new rChance value: {e}")
-                continue
-        elif cmd.lower().startswith("food_count"):
-            try:
-                value_str = cmd[10:].strip()  # "food_count" is 10 characters
-                if not value_str:
-                    log("Error: Couldn't find number after food_count command")
-                    continue
-                set_food_count(int(value_str))
-            except ValueError as e:
-                log(f"Error getting new food_count value: {e}")
                 continue
             
         elif cmd.lower().startswith("exec"):
