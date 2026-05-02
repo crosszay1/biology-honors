@@ -9,6 +9,9 @@ import os
 import threading #for the like input thing
 import curses # so terminal doesn't SUCK
 import sys
+import pandas as pd
+import plotly.graph_objects as go
+from collections import defaultdict
 
 GRID_SIZE = 64
 CELL_SIZE = 10
@@ -29,6 +32,8 @@ FOOD_DIRECTION_BONUS = 0.10
 
 screen = None
 clock = None
+marble_lifespans = [] #array to store the like marble ages stuff so we can later graph it ye
+#metrics_by_iteration = defaultdict(list)  # Track metrics per iteration
 
 
 # default global logger — prints to stdout; curses_main will override this
@@ -106,6 +111,7 @@ class Marble:
 
         self.brain = brain if brain is not None else MarbleBrain()
         self.hunger = 250
+        self.age = 0  
     def move_up(self):
         if self.y > 0:
             self.y -= 1
@@ -273,6 +279,68 @@ def load_marbles_from_weights(directory=weightsDir):
     return loaded_marbles
 
 
+def plot():
+    #Yes, this function here is vibecoded. The simulation is alreay done, all the hard parts are done, and frankly I have better things to do then this
+    """Generate an interactive plotly graph of marble lifespans over time."""
+    if not marble_lifespans:
+        log("No lifespan data collected yet.")
+        return
+    
+    try:
+        # Create dataframe
+        df = pd.DataFrame({
+            'Marble_ID': range(len(marble_lifespans)),
+            'Lifespan': marble_lifespans
+        })
+        
+        # Calculate running average
+        df['Running_Avg'] = df['Lifespan'].expanding().mean()
+        
+        # Create figure
+        fig = go.Figure()
+        
+        # Add scatter plot of individual lifespans
+        fig.add_trace(go.Scatter(
+            x=df['Marble_ID'],
+            y=df['Lifespan'],
+            mode='markers',
+            name='Individual Lifespan',
+            marker=dict(size=5, color='rgba(100, 150, 255, 0.6)'),
+            hovertemplate='<b>Marble %{x}</b><br>Age: %{y} iterations<extra></extra>'
+        ))
+        
+        # Add running average line
+        fig.add_trace(go.Scatter(
+            x=df['Marble_ID'],
+            y=df['Running_Avg'],
+            mode='lines',
+            name='Running Average',
+            line=dict(color='red', width=2),
+            hovertemplate='<b>Running Avg</b><br>Average: %{y:.1f} iterations<extra></extra>'
+        ))
+        
+        fig.update_layout(
+            title='Marble Lifespan Evolution',
+            xaxis_title='Marble Generation',
+            yaxis_title='Lifespan (iterations)',
+            hovermode='x unified',
+            template='plotly_dark',
+            width=1000,
+            height=600
+        )
+        
+        # Save and show
+        output_file = 'marble_lifespan_graph.html'
+        fig.write_html(output_file)
+        log(f"Graph saved to {output_file}. Open it in a web browser to view.")
+        log(f"Average lifespan: {df['Lifespan'].mean():.1f} iterations")
+        log(f"Max lifespan: {df['Lifespan'].max()} iterations")
+        log(f"Min lifespan: {df['Lifespan'].min()} iterations")
+        
+    except Exception as e:
+        log(f"Error plotting lifespan data: {e}")
+
+
 def main():
 
 
@@ -310,6 +378,7 @@ def main():
         #Main loop for each marble
         for marble in list(marbles):
             global log_iter
+            marble.age += 1
             marble.decide(foods)
             if log_iter % 1000 == 0:
                 log(f"Marble at ({marble.x}, {marble.y}) with hunger {marble.hunger}: ")
@@ -318,6 +387,7 @@ def main():
             
             #marble dies when hunger is depleted
             if marble.hunger <= 0:
+                marble_lifespans.append(marble.age)  #record lifespan.
                 marbles.remove(marble)
                 continue
 
@@ -414,6 +484,8 @@ def curses_main(stdscr):
             log("  quit/exit - Exit the program")
             log("  rchance <value> - Set random move chance (0.0 to 1.0)")
             log("  exec <code> - Execute arbitrary Python code (use with caution!)")
+            log("  start - Start the marble evolution simulation")
+            log("  plot/graph - Generate lifespan graph and save as HTML")
             log(" omg I clicked tab and ai generated list of all my commands so cool")
         elif cmd.lower().startswith("rchance"):
             try:
@@ -445,6 +517,8 @@ def curses_main(stdscr):
                 thread.start()
             except Exception as e:
                 log(f"Error starting main loop: {e}")
+        elif cmd.lower() in ("plot", "graph"):
+            plot()
                 
 
 curses.wrapper(curses_main)
