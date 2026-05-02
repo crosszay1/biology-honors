@@ -1,5 +1,4 @@
 .venv/
-marble_weights/
 __pycache__/
 *.pyc
 *.pyo
