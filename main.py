@@ -446,18 +446,26 @@ def curses_main(stdscr):
     log_lines = []
 
     def log(msg):
-        log_lines.append(msg)
-        output_win.clear()
+        try:
+            log_lines.append(msg)
 
-        # Show only visible lines
-        max_lines = output_h - 1
-        visible = log_lines[-max_lines:]
+            output_win.clear()
 
-        for i, line in enumerate(visible):
-            output_win.addstr(i, 0, line[:width - 1])
+            # Show only visible lines
+            max_lines = output_h - 1
+            visible = log_lines[-max_lines:]
 
-        output_win.refresh()
+            for i, line in enumerate(visible):
+                output_win.addstr(i, 0, line[:width - 1])
 
+            output_win.refresh()
+        except Exception as e:
+            # If logging fails, print to standard output as a fallback
+            try:
+                log("Logging error:", e)
+            except Exception as e:
+                print(f"Logging error: {e}")
+                print(f"The message was: {msg}")
     def get_input(prompt="> "):
         input_win.clear()
         input_win.border()
