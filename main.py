@@ -16,6 +16,7 @@ CELL_SIZE = 10
 WIDTH = GRID_SIZE * CELL_SIZE
 HEIGHT = GRID_SIZE * CELL_SIZE
 
+foodReward = 50
 INITIAL_MARBLES = 5
 MAX_MARBLES = 100
 FOOD_COUNT = 100
@@ -399,7 +400,7 @@ def main():
                 new_x, new_y = random_empty_cell(marbles, foods)
                 eaten.x = new_x
                 eaten.y = new_y
-                marble.hunger += 250
+                marble.hunger += foodReward
 
                 # duplicate on eat (with mutation)
                 if len(marbles) < MAX_MARBLES:
