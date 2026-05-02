@@ -8,10 +8,8 @@ import copy
 import os
 import threading #for the like input thing
 import curses # so terminal doesn't SUCK
-import sys
 import pandas as pd
 import plotly.graph_objects as go
-from collections import defaultdict
 
 GRID_SIZE = 64
 CELL_SIZE = 10
@@ -345,7 +343,7 @@ def main():
 
 
 
-    global screen, clock
+    global screen, clock, running
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Marble Evolution")
@@ -364,7 +362,6 @@ def main():
         spawn_food(marbles, foods)
     log("Waiting 2 seconds...")
     time.sleep(2)
-    running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -427,7 +424,7 @@ def main():
 
 
 def curses_main(stdscr):
-    global log
+    global log, running
     curses.curs_set(1)
     stdscr.clear()
 
@@ -481,6 +478,7 @@ def curses_main(stdscr):
     # Demo loop
     log("Console started.")
     while True:
+        global running
         cmd = get_input()
         log(f"> {cmd}")
         if cmd.lower() in ("quit", "exit"):
@@ -520,6 +518,7 @@ def curses_main(stdscr):
                 log(f"Error executing code: {e}")
         elif cmd.lower().startswith("start"):   
             try:
+                running = True
                 thread = threading.Thread(target=main)
                 log("Starting main loop...")
                 thread.start()
