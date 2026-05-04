@@ -23,7 +23,7 @@ FOOD_COUNT = 100
 speed = 200
 log_iter = 0
 
-rChance = 0.5
+rChance = 0
 MUTATION_STRENGTH = 0.01
 weightsDir = "marble_weights"
 FOOD_DIRECTION_BONUS = 0.10
@@ -475,9 +475,16 @@ def curses_main(stdscr):
         curses.noecho()
 
         return user_input
-
+    def init_menu(): 
+        log("Console started")
+        log("Current settings:")
+        log(f"Random chance {rChance}")
+        log(f"Mutation strength {MUTATION_STRENGTH}")
+        log(f"Food reward: {foodReward}")
+        log(f"Init marbles: {INITIAL_MARBLES}")
+        log(f"Max Marbles: {MAX_MARBLES}")
     # Demo loop
-    log("Console started.")
+    init_menu()
     while True:
         global running
         cmd = get_input()
