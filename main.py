@@ -477,12 +477,12 @@ def curses_main(stdscr):
         return user_input
     def init_menu(): 
         log("Console started")
-        log("Current settings:")
-        log(f"Random chance {rChance}")
-        log(f"Mutation strength {MUTATION_STRENGTH}")
-        log(f"Food reward: {foodReward}")
-        log(f"Init marbles: {INITIAL_MARBLES}")
-        log(f"Max Marbles: {MAX_MARBLES}")
+        log("   Current settings:")
+        log(f"  Random chance {rChance}")
+        log(f"  Mutation strength {MUTATION_STRENGTH}")
+        log(f"  Food reward: {foodReward}")
+        log(f"  Init marbles: {INITIAL_MARBLES}")
+        log(f"  Max Marbles: {MAX_MARBLES}")
     # Demo loop
     init_menu()
     while True:
