@@ -365,11 +365,6 @@ def main():
     time.sleep(2)
     while running:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_q:
-                    running = False
                 elif event.key == pygame.K_s:
                     save_marbles_weights(marbles)
 
