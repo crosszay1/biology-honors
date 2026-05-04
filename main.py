@@ -500,7 +500,8 @@ def curses_main(stdscr):
             log("  exec <code> - Execute arbitrary Python code (use with caution!)")
             log("  start - Start the marble evolution simulation")
             log("  plot/graph - Generate lifespan graph and save as HTML")
-            log(" omg I clicked tab and ai generated list of all my commands so cool")
+            log("")#spacing yk yk
+            log("  omg I clicked tab and ai generated list of all my commands so cool")
         elif cmd.lower().startswith("rchance"):
             try:
                 global rChance
