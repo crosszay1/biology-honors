@@ -365,7 +365,7 @@ def main():
     time.sleep(2)
     while running:
         for event in pygame.event.get():
-                elif event.key == pygame.K_s:
+                if event.key == pygame.K_s:
                     save_marbles_weights(marbles)
 
         #Main loop for each marble
