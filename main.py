@@ -533,8 +533,3 @@ def curses_main(stdscr):
                 
 
 curses.wrapper(curses_main)
-
-
-
-
-
